@@ -50,59 +50,38 @@ result = validator.query({"prompt": "a red cat"})
 
 ## Examples
 
-### SN1 — Text Prompting
+See [`examples/`](examples/) for full runnable scripts:
 
-```python
-import torch
-import torch.nn as nn
-import torch2bt as t2b
-from torch2bt.testing import MockValidator, MockSynapse
+| Script | Subnet | Description |
+|--------|--------|-------------|
+| [`sn1_text_prompting.py`](examples/sn1_text_prompting.py) | SN1 | Transformer LM → Text Prompting miner |
+| [`sn18_image_generation.py`](examples/sn18_image_generation.py) | SN18 | Diffusion model → Cortex image miner |
 
-class TinyLM(nn.Module):
-    def forward(self, input_ids: torch.Tensor) -> torch.Tensor:
-        ...
+## TODO
 
-t2b.package(TinyLM(), target_subnet=1, optimization="fp16", wallet_name="my_wallet")
+### Phase A — Alpha (current)
 
-# Local test — no live network needed
-async def my_forward(synapse: MockSynapse) -> MockSynapse:
-    synapse.completion = "Paris"
-    return synapse
+- [x] `inspector.py` — extract model `forward()` signature via reflection
+- [x] `codegen.py` — generate `protocol.py`, `miner.py`, `Dockerfile`, `pyproject.toml` using Python 3.14 t-strings
+- [x] `subnets/` — protocol registry for SN1 (Text Prompting) and SN18 (Cortex)
+- [x] `testing/` — `MockValidator` + `MockSynapse` for offline miner testing
+- [x] `t2b.package()` — end-to-end packaging API
+- [x] CI — ruff lint/format, zuban type check, pytest
+- [x] PyPI metadata — version `0.1.0a1`, classifiers, license, URLs
+- [ ] Publish `0.1.0a1` to PyPI
 
-validator = MockValidator("Prompting", subnet_id=1, forward_fn=my_forward)
-result = await validator.query({"roles": ["user"], "messages": ["Capital of France?"]})
-print(result.completion)  # Paris
-```
+### Phase B — Beta
 
-### SN18 — Image Generation (Cortex)
+- [ ] `t2b.deploy(platform="runpod")` — provision GPU instance via RunPod API
+- [ ] `t2b.deploy(platform="lambda")` — Lambda Labs GPU support
+- [ ] Auto-register hotkey with `btcli` post-deploy
+- [ ] Dynamic TAO (dTAO / BIT001) profitability dashboard integration
+- [ ] Auto-quantization — convert FP32 models to INT4/INT8 on the fly with bitsandbytes
+- [ ] `uv.lock` generation for deterministic miner environments
 
-```python
-import torch
-import torch.nn as nn
-import torch2bt as t2b
-from torch2bt.testing import MockValidator, MockSynapse
+### Phase C — Production
 
-class TinyDiffusion(nn.Module):
-    def forward(self, noise: torch.Tensor) -> torch.Tensor:
-        ...
-
-# SN18 only supports fp16 / bf16
-t2b.package(TinyDiffusion(), target_subnet=18, optimization="fp16", wallet_name="my_wallet")
-
-async def my_forward(synapse: MockSynapse) -> MockSynapse:
-    synapse.image_data = [0.0] * (64 * 64 * 3)
-    synapse.image_shape = (64, 64, 3)
-    return synapse
-
-validator = MockValidator("ImageResponse", subnet_id=18, forward_fn=my_forward)
-result = await validator.query({"prompt": "a red cat", "seed": 42, "width": 64, "height": 64, "num_inference_steps": 20})
-print(result.image_shape)  # (64, 64, 3)
-```
-
-> Full runnable scripts in [`examples/`](examples/).
-
-## Roadmap
-
-- **Alpha** — `package()` for SN1 + SN18, mock validator
-- **Beta** — RunPod/Lambda deploy API, auto-quantization
-- **Production** — Multi-subnet mining, self-healing miners
+- [ ] Multi-subnet mining — host multiple models on a single Axon
+- [ ] Self-healing miners — auto-restart on OOM or network failure
+- [ ] Expand subnet registry beyond SN1 + SN18
+- [ ] `t2b.benchmark()` — measure model latency vs subnet timeout requirements
