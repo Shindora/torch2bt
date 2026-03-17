@@ -8,24 +8,25 @@ from typing import Any, get_type_hints
 
 import torch
 import torch.nn as nn
+from torch import Tensor  # type: ignore[attr-defined]
 
 from torch2bt.models import ModelSignature, TensorSpec
 
 logger = logging.getLogger(__name__)
 
 _ANNOTATION_DTYPE_MAP: dict[Any, torch.dtype] = {
-    torch.Tensor: torch.float32,
-    torch.FloatTensor: torch.float32,
-    torch.HalfTensor: torch.float16,
-    torch.DoubleTensor: torch.float64,
-    torch.LongTensor: torch.int64,
-    torch.IntTensor: torch.int32,
-    torch.BoolTensor: torch.bool,
-    torch.ByteTensor: torch.uint8,
+    Tensor: torch.float32,
+    torch.FloatTensor: torch.float32,  # type: ignore[attr-defined]
+    torch.HalfTensor: torch.float16,  # type: ignore[attr-defined]
+    torch.DoubleTensor: torch.float64,  # type: ignore[attr-defined]
+    torch.LongTensor: torch.int64,  # type: ignore[attr-defined]
+    torch.IntTensor: torch.int32,  # type: ignore[attr-defined]
+    torch.BoolTensor: torch.bool,  # type: ignore[attr-defined]
+    torch.ByteTensor: torch.uint8,  # type: ignore[attr-defined]
 }
 
 
-def _resolve_dtype(annotation: Any) -> torch.dtype:
+def _resolve_dtype(annotation: Any) -> torch.dtype:  # noqa: ANN401
     """Resolve a type annotation to a torch.dtype.
 
     Args:
@@ -53,7 +54,7 @@ def _resolve_dtype(annotation: Any) -> torch.dtype:
     return torch.float32
 
 
-def _resolve_shape(annotation: Any) -> tuple[int | None, ...]:
+def _resolve_shape(annotation: Any) -> tuple[int | None, ...]:  # noqa: ANN401
     """Extract shape metadata from an Annotated[...] hint if present.
 
     Args:
@@ -90,7 +91,10 @@ def inspect_model(model: nn.Module) -> ModelSignature:
     try:
         hints = get_type_hints(model.forward, include_extras=True)
     except Exception:  # noqa: BLE001
-        logger.warning("Could not resolve type hints for %s.forward; assuming untyped tensors.", type(model).__name__)
+        logger.warning(
+            "Could not resolve type hints for %s.forward; assuming untyped tensors.",
+            type(model).__name__,
+        )
         hints = {}
 
     inputs: list[TensorSpec] = []
@@ -99,7 +103,7 @@ def inspect_model(model: nn.Module) -> ModelSignature:
             continue
         annotation = hints.get(name, param.annotation)
         if annotation is inspect.Parameter.empty:
-            annotation = torch.Tensor
+            annotation = Tensor
 
         inputs.append(
             TensorSpec(
@@ -107,7 +111,7 @@ def inspect_model(model: nn.Module) -> ModelSignature:
                 dtype=_resolve_dtype(annotation),
                 shape=_resolve_shape(annotation),
                 optional=param.default is not inspect.Parameter.empty,
-            )
+            ),
         )
 
     outputs: list[TensorSpec] = []
@@ -122,7 +126,7 @@ def inspect_model(model: nn.Module) -> ModelSignature:
                         name=f"output_{idx}",
                         dtype=_resolve_dtype(arg),
                         shape=_resolve_shape(arg),
-                    )
+                    ),
                 )
         else:
             outputs.append(
@@ -130,11 +134,14 @@ def inspect_model(model: nn.Module) -> ModelSignature:
                     name="output",
                     dtype=_resolve_dtype(return_hint),
                     shape=_resolve_shape(return_hint),
-                )
+                ),
             )
 
     if not outputs:
-        logger.warning("No return annotation on %s.forward; assuming a single float32 Tensor output.", type(model).__name__)
+        logger.warning(
+            "No return annotation on %s.forward; assuming a single float32 Tensor output.",
+            type(model).__name__,
+        )
         outputs.append(TensorSpec(name="output", dtype=torch.float32, shape=(None,)))
 
     model_cls = type(model)
@@ -168,7 +175,9 @@ def validate_against_subnet(signature: ModelSignature, subnet_id: int) -> list[s
         warnings.append("Model has no detected inputs — synapse will inject raw tensors.")
 
     if not signature.outputs:
-        warnings.append("Model has no detected outputs — output synapse fields will be placeholders.")
+        warnings.append(
+            "Model has no detected outputs — output synapse fields will be placeholders.",
+        )
 
     logger.info(
         "Validated %s against %s (SN%d): %d warning(s).",

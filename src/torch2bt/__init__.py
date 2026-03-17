@@ -57,8 +57,14 @@ def package(
         logger.warning("[validation] %s", w)
 
     if not protocol.compatible_optimizations or opt not in protocol.compatible_optimizations:
-        logger.warning("[validation] Optimization %s is not recommended for SN%d.", opt.value, target_subnet)
-        warnings.append(f"Optimization '{opt.value}' is not in the recommended set for SN{target_subnet}.")
+        logger.warning(
+            "[validation] Optimization %s is not recommended for SN%d.",
+            opt.value,
+            target_subnet,
+        )
+        warnings.append(
+            f"Optimization '{opt.value}' is not in the recommended set for SN{target_subnet}.",
+        )
 
     config = _make_config(model, target_subnet, opt, wallet_name, output_path)
 
@@ -68,7 +74,13 @@ def package(
     dockerfile_src = codegen.generate_dockerfile(config, protocol)
     uv_project_src = codegen.generate_uv_project(protocol, opt)
 
-    paths = codegen.write_package(output_path, protocol_src, miner_src, dockerfile_src, uv_project_src)
+    paths = codegen.write_package(
+        output_path,
+        protocol_src,
+        miner_src,
+        dockerfile_src,
+        uv_project_src,
+    )
     logger.info("Package written to: %s", output_path.resolve())
 
     return PackageResult(

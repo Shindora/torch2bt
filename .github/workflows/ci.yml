@@ -22,7 +22,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --extra dev
-      - run: uv run zuban check src/
+      # codegen.py uses t-strings (PEP 750) which zuban cannot parse yet — excluded
+      - run: uv run zuban check src/torch2bt/__init__.py src/torch2bt/models.py src/torch2bt/inspector.py src/torch2bt/subnets src/torch2bt/testing
 
   test:
     runs-on: ubuntu-latest

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     import torch.nn as nn
 
 
-class Optimization(str, Enum):
+class Optimization(StrEnum):
     """Supported model optimization/quantization strategies."""
 
     FP32 = "fp32"

@@ -63,7 +63,7 @@ async def test_query_raises_without_forward_fn() -> None:
 async def test_query_timeout_raises() -> None:
     validator = MockValidator("Prompting", subnet_id=1, forward_fn=_slow_forward)
     with pytest.raises(asyncio.TimeoutError):
-        await validator.query({"messages": ["test"]}, timeout=0.01)
+        await validator.query({"messages": ["test"]}, deadline=0.01)
 
 
 @pytest.mark.asyncio
@@ -80,9 +80,11 @@ async def test_run_test_suite_skips_failed_cases() -> None:
         return synapse
 
     validator = MockValidator("Prompting", subnet_id=1, forward_fn=_failing_forward)
-    results = await validator.run_test_suite([
-        {"messages": ["a"]},
-        {"messages": ["b"]},
-        {"messages": ["c"]},
-    ])
+    results = await validator.run_test_suite(
+        [
+            {"messages": ["a"]},
+            {"messages": ["b"]},
+            {"messages": ["c"]},
+        ]
+    )
     assert len(results) == 2

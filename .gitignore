@@ -48,3 +48,4 @@ Thumbs.db
 torch2bt_output/
 
 .claude
+.ruff_cache

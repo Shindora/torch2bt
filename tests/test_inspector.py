@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 
 from torch2bt.inspector import inspect_model, validate_against_subnet
-from torch2bt.models import TensorSpec
 
 
 class _SimpleLinear(nn.Module):
@@ -16,7 +15,7 @@ class _SimpleLinear(nn.Module):
 
 
 class _UntypedModel(nn.Module):
-    def forward(self, x, y):  # noqa: ANN001, ANN201
+    def forward(self, x, y):
         return x + y
 
 
@@ -26,7 +25,7 @@ class _MultiOutputModel(nn.Module):
 
 
 class _OptionalInputModel(nn.Module):
-    def forward(self, x: torch.Tensor, mask: torch.Tensor = None) -> torch.Tensor:  # type: ignore[assignment]
+    def forward(self, x: torch.Tensor, mask: torch.Tensor = None) -> torch.Tensor:  # type: ignore[assignment]  # noqa: ARG002
         return x
 
 

@@ -28,6 +28,6 @@ def get_subnet_protocol(subnet_id: int) -> SubnetProtocol:
         ValueError: If the subnet_id is not supported in Phase A.
     """
     if subnet_id not in _REGISTRY:
-        msg = f"Subnet {subnet_id} is not supported in Phase A. Supported subnets: {SUPPORTED_SUBNETS}"
+        msg = f"Subnet {subnet_id} is not supported in Phase A. Supported subnets: {SUPPORTED_SUBNETS}"  # noqa: E501
         raise ValueError(msg)
     return _REGISTRY[subnet_id]().protocol

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ class MockSynapse:
     fields: dict[str, Any] = field(default_factory=dict)
     dendrite_hotkey: str = "5FakeMockValidatorHotkey1111111111111111111"
 
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> Any:  # noqa: ANN401
         """Proxy attribute reads to the fields dict."""
         if name in ("fields", "dendrite_hotkey"):
             return object.__getattribute__(self, name)
@@ -32,7 +33,7 @@ class MockSynapse:
         except KeyError:
             return None
 
-    def __setattr__(self, name: str, value: Any) -> None:
+    def __setattr__(self, name: str, value: Any) -> None:  # noqa: ANN401
         """Proxy attribute writes to the fields dict, except for core attrs."""
         if name in ("fields", "dendrite_hotkey"):
             object.__setattr__(self, name, value)
@@ -78,13 +79,13 @@ class MockValidator:
     async def query(
         self,
         inputs: dict[str, Any],
-        timeout: float | None = None,
+        deadline: float | None = None,
     ) -> MockSynapse:
         """Send a single mock query through the miner's forward function.
 
         Args:
             inputs: Input field values to populate into the synapse.
-            timeout: Per-query timeout override in seconds.
+            deadline: Per-query timeout override in seconds.
 
         Returns:
             The MockSynapse returned by the miner with output fields set.
@@ -94,7 +95,9 @@ class MockValidator:
             asyncio.TimeoutError: If the forward call exceeds the timeout.
         """
         if self.forward_fn is None:
-            msg = "No forward_fn configured — pass an async miner forward function to MockValidator."
+            msg = (
+                "No forward_fn configured — pass an async miner forward function to MockValidator."
+            )
             raise RuntimeError(msg)
 
         synapse = MockSynapse(fields=dict(inputs))
@@ -107,21 +110,22 @@ class MockValidator:
             list(inputs.keys()),
         )
 
-        deadline = timeout if timeout is not None else self.default_timeout
-        result = await asyncio.wait_for(self.forward_fn(synapse), timeout=deadline)
+        timeout_secs = deadline if deadline is not None else self.default_timeout
+        async with asyncio.timeout(timeout_secs):
+            result = await self.forward_fn(synapse)
         self._results.append(dict(result.fields))
         return result
 
     async def run_test_suite(
         self,
         test_cases: list[dict[str, Any]],
-        timeout: float | None = None,
+        deadline: float | None = None,
     ) -> list[MockSynapse]:
         """Run a batch of test inputs sequentially through the miner.
 
         Args:
             test_cases: List of input field dicts to send as separate queries.
-            timeout: Per-query timeout override in seconds.
+            deadline: Per-query timeout override in seconds.
 
         Returns:
             List of MockSynapse results for every successful test case.
@@ -130,7 +134,7 @@ class MockValidator:
         for idx, case in enumerate(test_cases):
             logger.info("[MockValidator] Test case %d/%d", idx + 1, len(test_cases))
             try:
-                results.append(await self.query(case, timeout=timeout))
+                results.append(await self.query(case, deadline=deadline))
             except Exception:
                 logger.exception("[MockValidator] Test case %d failed.", idx + 1)
         return results

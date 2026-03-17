@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import torch.nn as nn
 import pytest
+import torch.nn as nn
 
 from torch2bt import codegen
 from torch2bt.inspector import inspect_model
@@ -14,7 +14,7 @@ from torch2bt.subnets import get_subnet_protocol
 
 
 class _DummyModel(nn.Module):
-    def forward(self, x):  # noqa: ANN001, ANN201
+    def forward(self, x):
         return x
 
 
@@ -90,7 +90,12 @@ def test_generate_uv_project_int4_adds_bitsandbytes(sn1_protocol) -> None:
     assert "bitsandbytes" in src
 
 
-def test_write_package_creates_files(dummy_signature, sn1_protocol, base_config, tmp_path: Path) -> None:
+def test_write_package_creates_files(
+    dummy_signature,
+    sn1_protocol,
+    base_config,
+    tmp_path: Path,
+) -> None:
     out = tmp_path / "pkg"
     protocol_src = codegen.generate_protocol(dummy_signature, sn1_protocol)
     miner_src = codegen.generate_miner(dummy_signature, sn1_protocol, base_config)
