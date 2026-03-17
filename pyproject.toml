@@ -4,13 +4,31 @@ build-backend = "hatchling.build"
 
 [project]
 name = "torch2bt"
-version = "0.1.0-alpha"
+version = "0.1.0a1"
 description = "The bridge between PyTorch research and the Bittensor decentralized intelligence network."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Vincent Tran" }]
+keywords = ["bittensor", "pytorch", "miner", "codegen", "decentralized-ai"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 requires-python = ">=3.14"
 dependencies = [
     "torch>=2.5",
     "pydantic>=2.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Shindora/torch2bt"
+Repository = "https://github.com/Shindora/torch2bt"
+Issues = "https://github.com/Shindora/torch2bt/issues"
 
 [project.optional-dependencies]
 testing = [
@@ -21,6 +39,7 @@ testing = [
 dev = [
     "torch2bt[testing]",
     "ruff>=0.9",
+    "zuban>=0.1",
 ]
 
 [tool.hatch.build.targets.wheel]
